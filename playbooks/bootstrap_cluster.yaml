@@ -44,6 +44,17 @@
         - kubeadm
         - kubectl
 
+    - name: Ensure rng-tools is installed for more randomness
+      apt:
+        name: rng-tools
+        state: present
+
+    - name: Ensure rng-tools is running and starts at boot
+      service:
+        name: rng-tools
+        enabled: true
+        state: started
+
     # TODO: One day, https://github.com/ansible/ansible/issues/16186
     - name: Kick the cluster
       shell: sleep 2 && /bin/systemctl --no-wall reboot
