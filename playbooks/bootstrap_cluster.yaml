@@ -44,8 +44,9 @@
         - kubeadm
         - kubectl
 
+    # TODO: One day, https://github.com/ansible/ansible/issues/16186
     - name: Kick the cluster
-      command: /bin/systemctl --no-wall reboot
+      shell: sleep 2 && /bin/systemctl --no-wall reboot
       async: 1
       poll: 0
       ignore_errors: true
