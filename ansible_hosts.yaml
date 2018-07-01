@@ -1,0 +1,19 @@
+all:
+  children:
+    master:
+      hosts:
+        node01:
+          ansible_host: 172.16.1.50
+    nodes:
+      hosts:
+        node02:
+          ansible_host: 172.16.1.51
+        node03:
+          ansible_host: 172.16.1.52
+        node04:
+          ansible_host: 172.16.1.53
+        node05:
+          ansible_host: 172.16.1.54
+  vars:
+    ansible_user: pirate
+    ansible_ssh_private_key_file: ~/.ssh/config.d/keys/id_rsa_yubikey_4c.pub

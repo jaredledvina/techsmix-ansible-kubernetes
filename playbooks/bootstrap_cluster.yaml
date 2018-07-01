@@ -1,0 +1,45 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Deploy SSH public key for saner access
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        exclusive: true
+        key: "{{ lookup('file', ansible_ssh_private_key_file) }}"
+
+    - name: Ensure cluster is fully up to date
+      apt:
+        name: '*'
+        state: latest
+        update_cache: true
+        autoclean: true
+        autoremove: true
+
+    - name: Ensure apt dependencies are installed
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - apt-transport-https
+        - ca-certificates
+
+    - name: Ensure Kubernetes apt key is installed
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        id: BA07F4FB
+
+    - name: Ensure Kubernetes apt repo is configured
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        filename: kubernetes
+
+    - name: Ensure Kubernetes components are installed
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl
