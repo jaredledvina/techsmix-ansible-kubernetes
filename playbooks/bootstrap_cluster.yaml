@@ -1,6 +1,9 @@
 ---
 - hosts: all
+  gather_facts: false
   become: true
+  vars:
+    pinned_version: '1.10*'
   tasks:
     - name: Deploy SSH public key for saner access
       authorized_key:
@@ -29,6 +32,15 @@
       apt_key:
         url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
         id: BA07F4FB
+
+    - name: Ensure Kubernetes apt pinning is configured
+      template:
+        src: templates/apt-preferences-kubernetes.j2
+        dest: /etc/apt/preferences.d/kubernetes
+        owner: root
+        group: root
+        mode: 0644
+      when: pinned_version is defined
 
     - name: Ensure Kubernetes apt repo is configured
       apt_repository:
