@@ -1,0 +1,71 @@
+---
+- hosts: master
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Get current registered nodes
+      command: "kubectl --kubeconfig='/etc/kubernetes/admin.conf' get --no-headers=true --output='custom-columns=NAME:.metadata.name' nodes"
+      register: current_nodes
+      changed_when: false
+
+    - name: Drain nodes
+      command: "kubectl --kubeconfig='/etc/kubernetes/admin.conf' drain {{ item }} --delete-local-data --force --ignore-daemonsets"
+      loop: "{{ groups['nodes'] | intersect(current_nodes.stdout_lines) }}"
+
+    - name: Delete nodes
+      command: "kubectl --kubeconfig='/etc/kubernetes/admin.conf' delete node {{ item }}"
+      loop: "{{ groups['nodes'] | intersect(current_nodes.stdout_lines) }}"
+
+- hosts: nodes
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Execute kubeadm reset
+      command: kubeadm reset --force
+
+- hosts: master
+  become: true
+  tasks:
+    - name: Execute kubeadm reset
+      command: kubeadm reset --force
+
+    - name: Force purge all iptables rules
+      shell: iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Ensure Kubernetes components are stopped
+      service:
+        name: "{{ item }}"
+        enabled: false
+        state: stopped
+      loop:
+        - kubelet
+
+    - name: Ensure Kubernetes components are purged
+      apt:
+        name: "{{ item }}"
+        state: absent
+        purge: true
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl
+
+    - name: Ensure HOME/.kube is purged
+      file:
+        path: ~/.kube
+        state: absent
+
+    # TODO: One day, https://github.com/ansible/ansible/issues/16186
+    - name: Kick the cluster
+      shell: sleep 2 && /bin/systemctl --no-wall reboot
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - name: Wait for cluster to come online
+      wait_for_connection:
+        delay: 10
