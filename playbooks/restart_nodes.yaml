@@ -1,0 +1,39 @@
+---
+- hosts: nodes
+  serial: 1
+  gather_facts: false
+  become: true
+  vars:
+    restart_nodes: true
+  tasks:
+    - name: Drain pods from node
+      local_action: "command kubectl drain {{ inventory_hostname }} --ignore-daemonsets --force --delete-local-data"
+      become: false
+
+    - debug:
+        msg: "{{item.root}}{{ item.path }}"
+      loop: "{{ query('filetree', 'maintenance_tasks/') }}"
+      when: item.state == 'file'
+
+
+    - name: Include maintenance tasks
+      include_tasks: "{{item.root}}{{ item.path }}"
+      loop: "{{ query('filetree', 'maintenance_tasks/') }}"
+      when: item.state == 'file'
+
+    # TODO: One day, https://github.com/ansible/ansible/issues/16186
+    - name: Kick the cluster
+      shell: sleep 2 && /bin/systemctl --no-wall reboot
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when: restart_nodes
+
+    - name: Wait for cluster to come online
+      wait_for_connection:
+        delay: 10
+      when: restart_nodes
+
+    - name: Uncordon node
+      local_action: "command kubectl uncordon {{ inventory_hostname }}"
+      become: false
