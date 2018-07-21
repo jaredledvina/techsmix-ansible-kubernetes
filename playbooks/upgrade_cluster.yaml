@@ -1,0 +1,96 @@
+---
+- hosts: master
+  any_errors_fatal: true
+  gather_facts: false
+  become: true
+  vars:
+    kubeadmn_extras: '--feature-gates CoreDNS=true'
+    pinned_version: '1.11*'
+    kubeadm_version: v1.11.1 # See https://storage.googleapis.com/kubernetes-release/release/stable.txt
+    arch: arm
+  tasks:
+    - name: Fetch the latest kubeadm binary
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubeadm_version }}/bin/linux/{{ arch }}/kubeadm"
+        dest: /usr/bin/kubeadm
+        mode: 0664
+
+    - name: Get the kubeadm version
+      command: kubeadm version --output short
+      changed_when: false
+      register: new_kubeadm_version
+
+    - name: Verify we got the correct kubeadm version
+      assert:
+        that:
+          - "kubeadm_version == new_kubeadm_version.stdout"
+        msg: "Kubeadm is new_kubeadm_version.stdout but we want kubeadm_version"
+
+    - name: Execute kubeadm upgrade plan
+      command: "kubeadm upgrade plan {{ kubeadmn_extras | default('') }}"
+
+    - name: Execute kubeadm upgrade apply
+      command: kubeadm upgrade apply --yes
+
+    - name: Ensure Kubernetes apt pinning is configured
+      template:
+        src: templates/apt-preferences-kubernetes.j2
+        dest: /etc/apt/preferences.d/kubernetes
+        owner: root
+        group: root
+        mode: 0644
+      when: pinned_version is defined
+
+    - name: Ensure we've upgrade Kubernetes
+      apt:
+        name: "{{ item }}"
+        state: latest
+        update_cache: true
+      loop:
+        - kubectl
+        - kubelet
+        - kubeadm
+
+- hosts: nodes
+  serial: 1
+  any_errors_fatal: true
+  gather_facts: false
+  become: true
+  vars:
+    restart_nodes: true
+    pinned_version: '1.11*'
+  tasks:
+    - name: Drain pods from node
+      local_action: "command kubectl drain {{ inventory_hostname }} --ignore-daemonsets --force --delete-local-data"
+      become: false
+
+    - name: Ensure Kubernetes apt pinning is configured
+      template:
+        src: templates/apt-preferences-kubernetes.j2
+        dest: /etc/apt/preferences.d/kubernetes
+        owner: root
+        group: root
+        mode: 0644
+      when: pinned_version is defined
+
+    - name: Ensure we've upgrade Kubernetes
+      apt:
+        name: "{{ item }}"
+        state: latest
+        update_cache: true
+      loop:
+        - kubectl
+        - kubelet
+        - kubeadm
+
+    - name: Upgrade kubelet config
+      shell: kubeadm upgrade node config --kubelet-version $(kubelet --version | cut -d ' ' -f 2)
+
+    - name: Restart kubelet
+      service:
+        name: kubelet
+        state: restarted
+
+    - name: Uncordon node
+      local_action: "command kubectl uncordon {{ inventory_hostname }}"
+      become: false
