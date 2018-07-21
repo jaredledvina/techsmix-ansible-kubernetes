@@ -6,14 +6,15 @@
   vars:
     kubeadmn_extras: '--feature-gates CoreDNS=true'
     pinned_version: '1.11*'
-    kubeadm_version: v1.11.1 # See https://storage.googleapis.com/kubernetes-release/release/stable.txt
+    kube_version: v1.11.1 # See https://storage.googleapis.com/kubernetes-release/release/stable.txt
     arch: arm
   tasks:
     - name: Fetch the latest kubeadm binary
       get_url:
-        url: "https://dl.k8s.io/release/{{ kubeadm_version }}/bin/linux/{{ arch }}/kubeadm"
+        url: "https://dl.k8s.io/release/{{ kube_version }}/bin/linux/{{ arch }}/kubeadm"
         dest: /usr/bin/kubeadm
-        mode: 0664
+        mode: 0775
+        force: true
 
     - name: Get the kubeadm version
       command: kubeadm version --output short
@@ -23,14 +24,15 @@
     - name: Verify we got the correct kubeadm version
       assert:
         that:
-          - "kubeadm_version == new_kubeadm_version.stdout"
-        msg: "Kubeadm is new_kubeadm_version.stdout but we want kubeadm_version"
+          - "kube_version == new_kubeadm_version.stdout"
+        msg: "Kubeadm is {{ new_kubeadm_version.stdout }} but we want {{ kube_version }}"
 
     - name: Execute kubeadm upgrade plan
       command: "kubeadm upgrade plan {{ kubeadmn_extras | default('') }}"
+      changed_when: false
 
     - name: Execute kubeadm upgrade apply
-      command: kubeadm upgrade apply --yes
+      command: "kubeadm upgrade apply {{ kube_version }} --yes"
 
     - name: Ensure Kubernetes apt pinning is configured
       template:
