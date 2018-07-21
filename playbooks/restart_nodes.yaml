@@ -10,12 +10,6 @@
       local_action: "command kubectl drain {{ inventory_hostname }} --ignore-daemonsets --force --delete-local-data"
       become: false
 
-    - debug:
-        msg: "{{item.root}}{{ item.path }}"
-      loop: "{{ query('filetree', 'maintenance_tasks/') }}"
-      when: item.state == 'file'
-
-
     - name: Include maintenance tasks
       include_tasks: "{{item.root}}{{ item.path }}"
       loop: "{{ query('filetree', 'maintenance_tasks/') }}"
