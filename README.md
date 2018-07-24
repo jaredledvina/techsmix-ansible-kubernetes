@@ -1,9 +1,20 @@
 # Prerequisites
-1. Obtain enough hardware for the cluster and setup
+1. Obtain enough hardware for the cluster, unbox, and setup
+
+## Hardware List:
+* 5 x [Raspberry Pi 3 Model B](http://a.co/3W7VdZz) 
+* 1 x [1ft ethernet cable, 6 pack](http://a.co/7Vnrwka)
+* 1 x [Anker PowerPort 6 w/ cables](http://a.co/4YNsLfA)
+* 5 x [Samsung 64GB MicroSDXC EVO Select Memory Card](http://a.co/agg6BOT)
+* 1 x [GeauxRobot Raspberry Pi 3 Model B 5-layer Dog Bone Stack Clear Case Box Enclosure](http://a.co/jdX93gK)
+* 1 x [Ubiquiti US-8 Unifi Switch](http://a.co/8ArxgYx)
+* 1 x [AUKEY USB C Hub with SD/TF Card Reader](http://a.co/bE3wieI)
+* 1 x [Kubernetes: Up and Running: Dive into the Future of Infrastructure](http://a.co/e2YQ5oj)
+
 2. Set static IP addresses for each node via DHCP options
 3. Flash the latest HypriotOS release to each SD card
 
-Example: 
+## Example [flash](https://github.com/hypriot/flash) command: 
 ```
 flash --hostname node01  https://github.com/hypriot/image-builder-rpi/releases/download/v1.9.0/hypriotos-rpi-v1.9.0.img.zip
 ```
