@@ -15,18 +15,8 @@
       loop: "{{ query('filetree', 'maintenance_tasks/') }}"
       when: item.state == 'file'
 
-    # TODO: One day, https://github.com/ansible/ansible/issues/16186
     - name: Kick the cluster
-      shell: sleep 2 && /bin/systemctl --no-wall reboot
-      async: 1
-      poll: 0
-      ignore_errors: true
-      when: restart_nodes
-
-    - name: Wait for cluster to come online
-      wait_for_connection:
-        delay: 10
-      when: restart_nodes
+      reboot:
 
     - name: Uncordon node
       local_action: "command kubectl uncordon {{ inventory_hostname }}"
