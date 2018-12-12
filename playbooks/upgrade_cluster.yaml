@@ -4,9 +4,9 @@
   gather_facts: false
   become: true
   vars:
-    kubeadmn_extras: '--feature-gates CoreDNS=true'
-    pinned_version: '1.12*'
-    kube_version: v1.12.2 # See https://storage.googleapis.com/kubernetes-release/release/stable.txt
+    kubeadmn_extras: ''
+    pinned_version: '1.13*'
+    kube_version: v1.13.0 # See https://storage.googleapis.com/kubernetes-release/release/stable.txt
     arch: arm
   tasks:
     - name: Fetch the latest kubeadm binary
@@ -64,7 +64,7 @@
   become: true
   vars:
     restart_nodes: true
-    pinned_version: '1.12*'
+    pinned_version: '1.13*'
   tasks:
     - name: Drain pods from node
       local_action: "command kubectl drain {{ inventory_hostname }} --ignore-daemonsets --force --delete-local-data"

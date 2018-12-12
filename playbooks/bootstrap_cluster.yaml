@@ -3,7 +3,7 @@
   gather_facts: false
   become: true
   vars:
-    pinned_version: '1.10*'
+    pinned_version: '1.13*'
   tasks:
     - name: Deploy SSH public key for saner access
       authorized_key:
