@@ -6,7 +6,7 @@
   vars:
     kubeadmn_extras: ''
     pinned_version: '1.13*'
-    kube_version: v1.13.0 # See https://storage.googleapis.com/kubernetes-release/release/stable.txt
+    kube_version: v1.13.3 # See https://storage.googleapis.com/kubernetes-release/release/stable.txt
     arch: arm
   tasks:
     - name: Fetch the latest kubeadm binary
