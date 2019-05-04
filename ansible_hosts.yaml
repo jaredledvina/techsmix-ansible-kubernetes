@@ -15,5 +15,5 @@ all:
         node05:
           ansible_host: 172.16.1.54
   vars:
-    ansible_user: pirate
+    ansible_user: alarm
     ansible_ssh_private_key_file: ~/.ssh/id_rsa_yubikey_4c.pub

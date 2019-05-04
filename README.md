@@ -12,13 +12,10 @@
 * 1 x [Kubernetes: Up and Running: Dive into the Future of Infrastructure](http://a.co/e2YQ5oj)
 
 2. Set static IP addresses for each node via DHCP options
-3. Flash the latest HypriotOS release to each SD card
-
-## Example [flash](https://github.com/hypriot/flash) command: 
-```
-flash --hostname node01  https://github.com/hypriot/image-builder-rpi/releases/download/v1.9.0/hypriotos-rpi-v1.9.0.img.zip
-```
-4. Power on the cluster
+3. Install [ArchLinux Arm](https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-3)
+4. Install `openssh`  and `python` on each node: `pacman --noconfirm -Sy python openssh`
+5. Configure each nodes hostname with `hostnamectl set-hostname nodeXX`
+6. Copy your public SSH key to each node: `ssh-copy-id -o PasswordAuthentication=yes alarm@nodeXX` 
 
 # Usage
 1. Configure `ansible_hosts.yaml` with the correct IP address
