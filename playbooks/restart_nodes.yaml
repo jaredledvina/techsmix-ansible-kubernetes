@@ -15,7 +15,7 @@
       loop: "{{ query('filetree', 'maintenance_tasks/') }}"
       when: item.state == 'file'
 
-    - name: Kick the cluster
+    - name: Restart node
       reboot:
 
     - name: Uncordon node
