@@ -6,11 +6,17 @@
   vars:
     bootstrap_packages:
       - audit
+      - base-devel
+      - git
       - htop
       - sudo
       - tree
       - uboot-tools
     restart_nodes: false
+    k8s_sysctl:
+      net.bridge.bridge-nf-call-iptables: 1
+      net.ipv4.ip_forward: 1
+      net.bridge.bridge-nf-call-ip6tables: 1
   tasks:
     - name: Ensure SSH public key is configured
       authorized_key:
@@ -73,3 +79,60 @@
     - name: Restart the node
       reboot:
       when: restart_nodes
+
+    - name: Install containerd and cni-plugins
+      pacman:
+        name:
+          - containerd
+          - cni-plugins
+
+    - name: Ensure containerd kernel modules are enabled
+      modprobe:
+        name: "{{ item }}"
+      loop:
+        - overlay
+        - br_netfilter
+
+    - name: Ensure sysctl is configured
+      sysctl:
+        sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        sysctl_set: yes
+      loop: "{{ k8s_sysctl | dict2items }}"
+
+    - name: Ensure /etc/containerd exists
+      file:
+        path: /etc/containerd
+        state: directory
+
+    - name: Ensure /etc/containerd/config.toml is configured
+      template:
+        src: templates/containerd_config.toml.j2
+        dest: /etc/containerd/config.toml
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Ensure container do is running and starts at boot
+      service:
+        name: containerd
+        enabled: true
+        state: started
+
+    - name: Ensure AUR kubernetes-bin is cloned
+      git:
+        repo: https://aur.archlinux.org/kubernetes-bin.git
+        dest: /opt/kubernetes-bin
+
+    - name: Ensure yay is cloned
+      git:
+        repo: https://aur.archlinux.org/yay.git
+        dest: /opt/yay/
+
+#    - name: Ensure yay is installed
+#      command: makepkg --syncdeps --install --nocolor --noconfirm
+#      args:
+#        chdir: /opt/yay
+#        creates:
+#
