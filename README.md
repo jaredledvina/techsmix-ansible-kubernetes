@@ -21,5 +21,5 @@
 1. Configure `ansible_hosts.yaml` with the correct IP address
 2. Install `pipenv` and execute `pipenv install --two` 
 3. Verify connectivity with `pipenv run ansible all -m ping`
-4. Bootstrap the cluster with `pipenv run ansible-playbook playbooks/bootstrap_cluster.yaml`
+4. Bootstrap the cluster with `pipenv run ansible-playbook --ask-become-pass -vv playbooks/bootstrap_cluster.yaml`
 5. Proceed with https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/
