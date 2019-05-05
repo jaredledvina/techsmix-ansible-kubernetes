@@ -12,7 +12,7 @@
       - sudo
       - tree
       - uboot-tools
-    restart_nodes: false
+    restart_nodes: true
     k8s_sysctl:
       net.bridge.bridge-nf-call-iptables: 1
       net.ipv4.ip_forward: 1
@@ -30,6 +30,18 @@
         update_cache: true
         upgrade: yes
 
+    - name: Ensure haveged is uninstalled
+      pacman:
+        name: haveged
+        recurse: true
+        state: absent
+
+    - name: Ensure lvm2 is uninstalled
+      pacman:
+        name: lvm2
+        recurse: true
+        state: absent
+
     - name: Ensure rng-tools is installed
       pacman:
         name: rng-tools
@@ -41,19 +53,15 @@
         enabled: true
         state: started
 
-    - name: Ensure haveged is uninstalled
-      pacman:
-        name: haveged
-        state: absent
-
-    - name: Ensure lvm2 is uninstalled
-      pacman:
-        name: lvm2
-        state: absent
-
     - name: Ensure bootstrap packages are installed
       pacman:
         name: "{{ bootstrap_packages }}"
+
+    - name: Ensure auditd is running and starts at boot
+      service:
+        name: auditd
+        enabled: true
+        state: started
 
     - name: Ensure /boot/boot.txt is configured
       template:
@@ -70,28 +78,29 @@
         chdir: /boot
       when: boot_txt is changed
 
-    - name: Ensure auditd is running and starts at boot
-      service:
-        name: auditd
-        enabled: true
-        state: started
-
-    - name: Restart the node
-      reboot:
-      when: restart_nodes
-
     - name: Install containerd and cni-plugins
       pacman:
         name:
           - containerd
           - cni-plugins
 
-    - name: Ensure containerd kernel modules are enabled
+    - name: Ensure containerd kernel modules are loaded
       modprobe:
         name: "{{ item }}"
       loop:
         - overlay
         - br_netfilter
+
+    - name: Ensure containerd kernel modules are loaded at boot
+      copy:
+        content: |
+          # This file is managed by Ansible
+          overlay
+          br_netfilter
+        dest: /etc/modules-load.d/containerd.conf
+        owner: root
+        group: root
+        mode: 0644
 
     - name: Ensure sysctl is configured
       sysctl:
@@ -114,25 +123,13 @@
         group: root
         mode: 0755
 
-    - name: Ensure container do is running and starts at boot
+    - name: Ensure containerd is running and starts at boot
       service:
         name: containerd
         enabled: true
         state: started
 
-    - name: Ensure AUR kubernetes-bin is cloned
-      git:
-        repo: https://aur.archlinux.org/kubernetes-bin.git
-        dest: /opt/kubernetes-bin
+    - name: Restart the node
+      reboot:
+      when: restart_nodes
 
-    - name: Ensure yay is cloned
-      git:
-        repo: https://aur.archlinux.org/yay.git
-        dest: /opt/yay/
-
-#    - name: Ensure yay is installed
-#      command: makepkg --syncdeps --install --nocolor --noconfirm
-#      args:
-#        chdir: /opt/yay
-#        creates:
-#
