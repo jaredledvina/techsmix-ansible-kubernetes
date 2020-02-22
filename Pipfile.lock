@@ -84,12 +84,12 @@
         },
         "enum34": {
             "hashes": [
-                "sha256:075e6c23fbf537eaf379ebe17dbcb65a4f2d2ecd03ac5a3ac534c313afbdfa33",
-                "sha256:36db3d880f7a9a4989b1dfba625381a82294d1d3cfaa62bbbf18b594e195fa31",
-                "sha256:cffbadfe6cd17ea2408adb8bb21b12bd30dd0d15de90af44e1dd4b60435993e2"
+                "sha256:13ef9a1c478203252107f66c25b99b45b1865693ca1284aab40dafa7e1e7ac17",
+                "sha256:708aabfb3d5898f99674c390d360d59efdd08547019763622365f19e84a7fef4",
+                "sha256:98df1f1937840b7d8012fea7f0b36392a3e6fd8a2f429c48a3ff4b1aad907f3f"
             ],
             "index": "pypi",
-            "version": "==1.1.8"
+            "version": "==1.1.9"
         },
         "ipaddress": {
             "hashes": [
